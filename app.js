@@ -1,6 +1,7 @@
 const form = document.getElementById('add-form');
 const input = document.getElementById('new-task');
 const list = document.getElementById('task-list');
+const addError = document.getElementById('add-error');
 
 const STORAGE_KEY = 'tasks';
 
@@ -106,6 +107,11 @@ function render() {
 
 form.addEventListener('submit', (e) => {
   e.preventDefault();
+  if (input.value.trim() === '') {
+    addError.textContent = 'לא ניתן להוסיף משימה ריקה';
+    return;
+  }
+  addError.textContent = '';
   tasks.unshift({ text: input.value });
   input.value = '';
   save();
