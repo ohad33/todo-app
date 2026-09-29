@@ -23,13 +23,85 @@ function save() {
 
 let tasks = load();
 
+let editingIndex = null;
+
+function makeButton(label, onClick) {
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.textContent = label;
+  btn.addEventListener('click', onClick);
+  return btn;
+}
+
 function render() {
   list.replaceChildren();
-  for (const task of tasks) {
+  let editInput = null;
+  tasks.forEach((task, i) => {
     const li = document.createElement('li');
-    li.textContent = task.text;
+
+    if (i === editingIndex) {
+      const edit = document.createElement('input');
+      edit.type = 'text';
+      edit.value = task.text;
+      edit.setAttribute('aria-label', 'עריכת משימה');
+      editInput = edit;
+
+      const error = document.createElement('span');
+      error.setAttribute('role', 'alert');
+
+      li.append(
+        edit,
+        makeButton('שמור', () => {
+          if (edit.value.trim() === '') {
+            error.textContent = 'לא ניתן לשמור משימה ריקה';
+            return;
+          }
+          task.text = edit.value;
+          editingIndex = null;
+          save();
+          render();
+        }),
+        makeButton('בטל', () => {
+          editingIndex = null;
+          render();
+        }),
+        error
+      );
+    } else {
+      const check = document.createElement('input');
+      check.type = 'checkbox';
+      check.setAttribute('aria-label', 'בוצע');
+      check.checked = task.done === true;
+      check.addEventListener('change', () => {
+        task.done = check.checked;
+        save();
+        render();
+      });
+
+      const text = document.createElement('span');
+      text.textContent = task.text;
+      if (task.done) text.style.textDecoration = 'line-through';
+
+      li.append(
+        check,
+        text,
+        makeButton('ערוך', () => {
+          editingIndex = i;
+          render();
+        }),
+        makeButton('מחק', () => {
+          if (confirm('למחוק את המשימה?')) {
+            tasks.splice(i, 1);
+            editingIndex = null;
+            save();
+            render();
+          }
+        })
+      );
+    }
     list.append(li);
-  }
+  });
+  if (editInput) editInput.focus();
 }
 
 form.addEventListener('submit', (e) => {
